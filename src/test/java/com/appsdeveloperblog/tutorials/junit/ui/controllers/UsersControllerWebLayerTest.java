@@ -8,6 +8,7 @@ import com.appsdeveloperblog.tutorials.junit.ui.response.UserRest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
@@ -41,6 +42,16 @@ public class UsersControllerWebLayerTest {
 //    @MockBean
     @Autowired
     UsersService usersService;
+
+    UserDetailsRequestModel userDetailsRequestModel = new UserDetailsRequestModel();
+
+    @BeforeEach
+    void setup() {
+        userDetailsRequestModel.setFirstName("");
+        userDetailsRequestModel.setLastName("Corcoran");
+        userDetailsRequestModel.setEmail("robbie@robbie.com");
+        userDetailsRequestModel.setPassword("123456789");
+    }
 
     @Test
     @DisplayName("User can be created.")
@@ -98,17 +109,35 @@ public class UsersControllerWebLayerTest {
     @DisplayName("First name is not empty.")
     void testCreateUser_whenFirstNameIsNotProvided_throws400BadRequest() throws Exception {
         //        Arrange
-        UserDetailsRequestModel userDetailsRequestModel = new UserDetailsRequestModel();
         userDetailsRequestModel.setFirstName("");
-        userDetailsRequestModel.setLastName("Corcoran");
-        userDetailsRequestModel.setEmail("robbie@robbie.com");
-        userDetailsRequestModel.setPassword("123456789");
 
         RequestBuilder requestBuilder = MockMvcRequestBuilders.post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsString(userDetailsRequestModel));
 
+
+//        Act
+        MvcResult mvcResult = mockMvc.perform(requestBuilder).andReturn();
+
+//        Assert
+        assertEquals(
+                HttpStatus.BAD_REQUEST.value(),
+                mvcResult.getResponse().getStatus(),
+                "Incorrect HTTP Status Code returned"
+        );
+    }
+
+    @Test
+    @DisplayName("First name is longer than 2 characters.")
+    void testCreateUser_whenFirstNameIsLessThanTwoCharacters_throws400BadRequest() throws Exception {
+        //        Arrange
+        userDetailsRequestModel.setFirstName("A");
+
+        RequestBuilder requestBuilder = MockMvcRequestBuilders.post("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(userDetailsRequestModel));
 
 //        Act
         MvcResult mvcResult = mockMvc.perform(requestBuilder).andReturn();
