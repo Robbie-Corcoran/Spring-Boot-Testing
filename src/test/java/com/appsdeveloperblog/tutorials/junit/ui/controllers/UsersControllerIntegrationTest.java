@@ -1,5 +1,6 @@
 package com.appsdeveloperblog.tutorials.junit.ui.controllers;
 
+import com.appsdeveloperblog.tutorials.junit.security.SecurityConstants;
 import com.appsdeveloperblog.tutorials.junit.ui.response.UserRest;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,8 +14,7 @@ import org.springframework.http.*;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 //@TestPropertySource(
@@ -85,5 +85,32 @@ public class UsersControllerIntegrationTest {
                 HttpStatus.FORBIDDEN,
                 response.getStatusCode(),
                 "HttpStatusCode 403 should have been returned.");
+    }
+
+    @Test
+    @DisplayName("/login works.")
+    void testUserLogin_whenValidCredentialsProvided_returnsJWTinAuthorizationHeader() throws JSONException {
+//        Arrange
+        JSONObject loginCredentials = new JSONObject();
+        loginCredentials.put("email", "robbie@robbie.com");
+        loginCredentials.put("password", "123456789");
+        loginCredentials.put("repeatPassword", "123456789");
+
+        HttpEntity<String> request = new HttpEntity<>(loginCredentials.toString());
+
+//        Act
+        ResponseEntity response = testRestTemplate.postForEntity("/users/login", request, null);
+
+//        Assert
+        assertEquals(
+                HttpStatus.OK,
+                response.getStatusCode(),
+                "HttpStatusCode 200 should have been returned.");
+        assertNotNull(
+                response.getHeaders().getValuesAsList(SecurityConstants.HEADER_STRING).get(0),
+                "Response should contain Authorization header with JWT");
+        assertNotNull(
+                response.getHeaders().getValuesAsList(response.getHeaders().getValuesAsList("UserID").get(0)),
+                "Response should contain UserID header with JWT");
     }
 }
