@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 
 import java.util.List;
@@ -62,4 +63,27 @@ public class UsersControllerIntegrationTest {
                 "User's ID should not be empty.");
     }
 
+    @Test
+    @DisplayName("GET /users requires JWT.")
+    void testGetUsers_whenMissingJWT_returns403() {
+//        Arrange
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/json");
+
+        HttpEntity requestEntity = new HttpEntity<>(null, headers);
+
+//        Act
+        ResponseEntity<List<UserRest>> response = testRestTemplate.exchange(
+                "/users",
+                HttpMethod.GET,
+                requestEntity,
+                new ParameterizedTypeReference<List<UserRest>>() {
+                });
+
+//        Assert
+        assertEquals(
+                HttpStatus.FORBIDDEN,
+                response.getStatusCode(),
+                "HttpStatusCode 403 should have been returned.");
+    }
 }
