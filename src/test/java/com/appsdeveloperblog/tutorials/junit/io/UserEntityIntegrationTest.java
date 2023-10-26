@@ -79,4 +79,26 @@ public class UserEntityIntegrationTest {
                 "Was expecting a PersistenceException to be thrown.");
     }
 
+    @Test
+    @DisplayName("UserId must be unique.")
+    void testUserEntity_whenUserIdIsNotUnique_shouldThrowException() {
+//        Arrange
+        UserEntity duplicateUserEntity = new UserEntity();
+        duplicateUserEntity.setUserId(userEntity.getUserId());
+        duplicateUserEntity.setFirstName("Robbie");
+        duplicateUserEntity.setLastName("Corcoran");
+        duplicateUserEntity.setEmail("test@test.com");
+        duplicateUserEntity.setEncryptedPassword("123456789");
+
+        testEntityManager.persistAndFlush(duplicateUserEntity);
+
+//        Act & Assert
+        assertThrows(
+                PersistenceException.class,
+                () -> {
+                    testEntityManager.persistAndFlush(userEntity);
+                },
+                "Was expecting a PersistenceException to be thrown.");
+
+    }
 }
