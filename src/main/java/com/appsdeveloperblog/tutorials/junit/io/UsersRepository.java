@@ -11,7 +11,7 @@ import java.util.List;
 public interface UsersRepository extends PagingAndSortingRepository<UserEntity, Long> {
     UserEntity findByEmail(String email);
 
-    UserEntity findById(String userId);
+    UserEntity findByUserId(String userId);
 
     UserEntity findByEmailEndsWith(String email);
 
