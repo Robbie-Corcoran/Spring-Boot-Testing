@@ -1,42 +1,43 @@
 package com.appsdeveloperblog.tutorials.junit.io;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
+import javax.persistence.PersistenceException;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 public class UserEntityIntegrationTest {
 
     @Autowired
-    TestEntityManager testEntityManager;
-    @Autowired
-    private UsersRepository usersRepository;
+    private TestEntityManager testEntityManager;
+    UserEntity userEntity;
 
-    @Test
-    @DisplayName("UserEntity is created")
-    void testUserEntity_whenValidUserDetailsProvided_shouldReturnStoredUserDetails() {
-//        Arrange
-        UserEntity userEntity = new UserEntity();
+    @BeforeEach
+    void setup() {
+        userEntity = new UserEntity();
         userEntity.setUserId(UUID.randomUUID().toString());
         userEntity.setFirstName("Robbie");
         userEntity.setLastName("Corcoran");
         userEntity.setEmail("test@test.com");
         userEntity.setEncryptedPassword("123456789");
+    }
 
-
+    @Test
+    @DisplayName("UserEntity is created")
+    void testUserEntity_whenValidUserDetailsProvided_shouldReturnStoredUserDetails() {
 //        Act
         UserEntity storedUserEntity = testEntityManager.persistAndFlush(userEntity);
 
 //        Assert
         assertTrue(
-                storedUserEntity.getId() == 1,
+                storedUserEntity.getId() > 0,
                 "Should have only 1 UserId in table."
         );
 
@@ -60,6 +61,22 @@ public class UserEntityIntegrationTest {
                 storedUserEntity.getEncryptedPassword(),
                 "Returned UserEncryptedPassword is incorrect");
 
+    }
+
+    @Test
+    @DisplayName("Length of firstName")
+    void testUserEntity_whenFirstnameIsTooLong_shouldThrowException() {
+//        Arrange
+        userEntity.setFirstName("Qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmwertyuiopasdfghjklzxcvbnm");
+
+//        Act & Assert
+
+        assertThrows(
+                PersistenceException.class,
+                () -> {
+                    testEntityManager.persistAndFlush(userEntity);
+                },
+                "Was expecting a PersistenceException to be thrown.");
     }
 
 }
